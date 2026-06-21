@@ -1,7 +1,19 @@
 // ==========================================
 // Staubabsaug-Adapter für Bosch Tellerschleifer
-// Perfekt fluchtender Übergang ohne Stufen
+// Perfekt fluchtender Übergang mit gerundeter Öffnung
 // ==========================================
+
+/* ======================================================================
+EMPFOHLENE 3D-DRUCK-EINSTELLUNGEN:
+----------------------------------------------------------------------
+* Infill (Füllung):    25% - 30% (Gyroid oder Grid)
+* Wandlinien:          Mindestens 3-4 Perimeters für stabile Rohrwände
+* Schichthöhe:         0.20mm
+* Stützstruktur:       NEIN (Vollständig ohne Support druckbar, wenn du
+                       das Teil auf der kleinen Schleifer-Öffnung stehend druckst)
+* Druckausrichtung:    Aufrecht auf dem Schleifer-Anschluss stehend
+======================================================================
+*/
 
 /* [Globale Einstellungen] */
 // Höhere Werte liefern rundere Rohre, verlängern aber die Rechenzeit
@@ -25,6 +37,8 @@ trichter_laenge = 15.0;
 sauger_innen = 34.80;
 // Länge des abgewinkelten Anschlusses für den Staubsauger
 sauger_laenge = 30.0;
+// Kantenrundung an der Staubsauger-Öffnung in mm
+oeffnung_rundung = 2.0;
 
 /* [Winkel] */
 // Knickwinkel in Grad am oberen Ende des Trichters
@@ -63,7 +77,7 @@ difference() {
         cylinder(h = sauger_laenge, d = sauger_aussen);
     }
 
-    // 2. INNENFORM (Hohlraum für den Luftstrom)
+    // 2. INNENFORM UND RUNDUNGEN (Hohlraum für den Luftstrom)
     union() {
         // Kanal: Schleifer-Anschluss
         translate([0, 0, -1])
@@ -84,5 +98,21 @@ difference() {
         rotate([knick_winkel, 0, 0])
         translate([0, 0, -0.1])
         cylinder(h = sauger_laenge + 0.2, d = sauger_innen);
+        
+        // Kantenrundung an der großen Öffnung
+        // Wir platzieren einen rotierenden Kreis an der Innenkante des Ausgangs
+        translate([0, -versatz_y, schleifer_laenge + trichter_laenge])
+        rotate([knick_winkel, 0, 0])
+        translate([0, 0, sauger_laenge])
+        difference() {
+            // Hilfskörper, der über die Kante ragt
+            translate([0, 0, -oeffnung_rundung])
+            cylinder(h = oeffnung_rundung + 0.1, d = sauger_aussen + 0.1);
+            
+            // Der Torus (Ring), der die Rundung erzeugt
+            rotate_extrude()
+            translate([sauger_innen/2 + oeffnung_rundung, -oeffnung_rundung, 0])
+            circle(r = oeffnung_rundung);
+        }
     }
 }
